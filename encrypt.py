@@ -18,7 +18,7 @@ def encrypt_data(data: str, shift: int) -> str:
         raise HTTPException(status_code=500, detail="Encryption failed.")
 
 # Endpoint to encrypt data with a custom shift
-@app.post("/encrypt/")
+@app.post("/encrypt.py")
 async def encrypt(data: str, shift: int = 3):
     """
     Encrypt the data with a Caesar Cipher using a custom shift.
