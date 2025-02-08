@@ -1,12 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
-
-# API Key for authentication
-API_KEY = "supersecretapikey"
-
-def get_api_key(api_key: str):
-    if api_key != API_KEY:
-        raise HTTPException(status_code=403, detail="Invalid API Key")
-    return api_key
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
@@ -17,15 +9,29 @@ ENCRYPTION_MAP = {
     "s": "$", "t": "+", "u": "U", "v": "V", "w": "W", "x": "*", "y": "Y", "z": "Z"
 }
 
+# Reverse mapping for decryption
+DECRYPTION_MAP = {v: k for k, v in ENCRYPTION_MAP.items()}
+
 def encrypt_text(plain_text: str) -> str:
-    encrypted_text = "".join(ENCRYPTION_MAP.get(char, char) for char in plain_text.lower())
-    return encrypted_text
+    return "".join(ENCRYPTION_MAP.get(char, char) for char in plain_text.lower())
+
+def decrypt_text(encrypted_text: str) -> str:
+    return "".join(DECRYPTION_MAP.get(char, char) for char in encrypted_text)
 
 @app.post("/encrypt")
-def encrypt(data: dict, api_key: str = Depends(get_api_key)):
+def encrypt(data: dict):
     text = data.get("text")
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
     
     encrypted_text = encrypt_text(text)
     return {"encrypted": encrypted_text}
+
+@app.post("/decrypt")
+def decrypt(data: dict):
+    text = data.get("text")
+    if not text:
+        raise HTTPException(status_code=400, detail="Text is required")
+    
+    decrypted_text = decrypt_text(text)
+    return {"decrypted": decrypted_text}
