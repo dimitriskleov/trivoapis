@@ -1,37 +1,33 @@
+# encrypt.py
 from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
-# Custom simple encryption method using character mapping
-ENCRYPTION_MAP = {
-    "a": "@", "b": "8", "c": "(", "d": "#", "e": "3", "f": "!", "g": "6", "h": "4", "i": "1",
-    "j": "?", "k": "<", "l": "7", "m": "M", "n": "N", "o": "0", "p": "%", "q": "Q", "r": "2",
-    "s": "$", "t": "+", "u": "U", "v": "V", "w": "W", "x": "*", "y": "Y", "z": "Z"
-}
+# Custom encryption function (Caesar Cipher)
+def encrypt_data(data: str, shift: int) -> str:
+    try:
+        encrypted = ""
+        for char in data:
+            if char.isalpha():  # Encrypt only alphabetic characters
+                shift_amount = 65 if char.isupper() else 97
+                encrypted += chr((ord(char) - shift_amount + shift) % 26 + shift_amount)
+            else:
+                encrypted += char  # Leave non-alphabetic characters unchanged
+        return encrypted
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Encryption failed.")
 
-# Reverse mapping for decryption
-DECRYPTION_MAP = {v: k for k, v in ENCRYPTION_MAP.items()}
-
-def encrypt_text(plain_text: str) -> str:
-    return "".join(ENCRYPTION_MAP.get(char, char) for char in plain_text.lower())
-
-def decrypt_text(encrypted_text: str) -> str:
-    return "".join(DECRYPTION_MAP.get(char, char) for char in encrypted_text)
-
-@app.post("/encrypt")
-def encrypt(data: dict):
-    text = data.get("text")
-    if not text:
-        raise HTTPException(status_code=400, detail="Text is required")
-    
-    encrypted_text = encrypt_text(text)
-    return {"encrypted": encrypted_text}
-
-@app.post("/decrypt")
-def decrypt(data: dict):
-    text = data.get("text")
-    if not text:
-        raise HTTPException(status_code=400, detail="Text is required")
-    
-    decrypted_text = decrypt_text(text)
-    return {"decrypted": decrypted_text}
+# Endpoint to encrypt data with a custom shift
+@app.post("/encrypt/")
+async def encrypt(data: str, shift: int = 3):
+    """
+    Encrypt the data with a Caesar Cipher using a custom shift.
+    :param data: The text to encrypt.
+    :param shift: The number of positions to shift the characters.
+    :return: The encrypted text.
+    """
+    try:
+        encrypted_data = encrypt_data(data, shift)
+        return {"encrypted_data": encrypted_data}
+    except HTTPException as e:
+        raise e
